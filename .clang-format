@@ -1,0 +1,17 @@
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+UseTab: Never
+
+ColumnLimit: 128
+
+AllowShortIfStatementsOnASingleLine: false
+
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 4
+
+AlignConsecutiveMacros: Consecutive
+
+IndentCaseLabels: True
+
+SortIncludes: false  # Do not sort the include files!!!
