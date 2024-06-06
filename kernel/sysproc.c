@@ -6,6 +6,8 @@
 #include "spinlock.h"
 #include "proc.h"
 
+#include "sysinfo.h"  // Lab2: syscall
+
 uint64
 sys_exit(void)
 {
@@ -90,4 +92,33 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+// Lab2: syscall - system call tracing
+uint64
+sys_trace(void)
+{
+  argint(0, &(myproc()->traceMask));
+  return 0;
+}
+
+// Lab2: syscall - system information
+uint64
+sys_sysinfo(void)
+{
+  struct sysinfo info;
+  struct proc *currentProc = myproc();
+
+  info.freemem = getFreeMemory();
+  info.nproc = countNotUnusedProcess();
+
+  uint64 userAddress;
+  argaddr(0, &userAddress);
+
+  if (copyout(currentProc->pagetable, userAddress, (char*)&info, sizeof(info)) < 0)
+  {
+    return -1;
+  }
+
+  return 0;
 }

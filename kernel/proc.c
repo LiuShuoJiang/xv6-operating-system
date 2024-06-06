@@ -146,6 +146,9 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  // Lab2: syscall
+  p->traceMask = 0;
+
   return p;
 }
 
@@ -169,6 +172,9 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+
+  // Lab2: syscall
+  p->traceMask = 0;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -301,6 +307,9 @@ fork(void)
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
+
+  // Lab2: syscall
+  np->traceMask = p->traceMask;
 
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
@@ -685,4 +694,25 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+// Lab2: syscall
+// count the number of processes which are not UNUSED
+uint64
+countNotUnusedProcess(void)
+{
+  uint64 res = 0;
+  struct proc *currentProc;
+
+  for (currentProc = proc; currentProc < &proc[NPROC]; ++currentProc)
+  {
+    acquire(&currentProc->lock);
+    if (currentProc->state != UNUSED)
+    {
+      res++;
+    }
+    release(&currentProc->lock);
+  }
+
+  return res;
 }

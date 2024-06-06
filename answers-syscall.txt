@@ -1,0 +1,18 @@
+1. usertrap() at kernel/trap.c called syscall.
+
+2. p->trapframe->a7 is 7, which is the system call number for exec, according to syscall.h
+
+3. The SPP bit of sstatus register is 0, so the previous mode is user node.
+
+4. Here are the assembly code for sepc=0x0000000080002070 stval=0x0000000000000000 :
+
+80001e78:	00006517          	auipc	a0,0x6
+80001e7c:	53050513          	addi	a0,a0,1328 # 800083a8 <states.0+0x120>
+80001e80:	00004097          	auipc	ra,0x4
+80001e84:	da8080e7          	jalr	-600(ra) # 80005c28 <printf>
+
+num is in register a3.
+
+5. TODO
+
+6. process name is proc. pid is 1.

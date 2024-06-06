@@ -1,4 +1,5 @@
 struct stat;
+struct sysinfo;  // Lab2: syscall
 
 // system calls
 int fork(void);
@@ -22,6 +23,11 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+
+// Lab2: syscall
+int trace(int);
+int sysinfo(struct sysinfo*);
+
 
 // ulib.c
 int stat(const char*, struct stat*);
