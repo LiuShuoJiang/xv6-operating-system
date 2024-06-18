@@ -293,6 +293,38 @@ freewalk(pagetable_t pagetable)
   kfree((void*)pagetable);
 }
 
+// Lab3: page table ------ print a page table
+void
+pageTablePrint(pagetable_t pagetable, uint depth)
+{
+  for (int i = 0; i < 512; i++)
+  {
+    pte_t pte = pagetable[i];
+    if (pte & PTE_V)
+    {
+      for (int j = 0; j < depth; j++)
+      {
+        printf(".. ");
+      }
+      uint64 child = PTE2PA(pte);
+      printf("..%d: pte %p pa %p\n", i, pte, child);
+
+      if (depth < 2)
+      {
+        pageTablePrint((pagetable_t)child, depth + 1);
+      }
+    }
+  }
+}
+
+// Lab3: page table ------ print a page table
+void
+vmprint(pagetable_t pagetable)
+{
+  printf("page table %p\n", pagetable);
+  pageTablePrint(pagetable, 0);
+}
+
 // Free user memory pages,
 // then free page-table pages.
 void
