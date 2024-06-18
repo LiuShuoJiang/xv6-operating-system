@@ -75,6 +75,37 @@ int
 sys_pgaccess(void)
 {
   // lab pgtbl: your code here.
+  // Lab3: page table ------ detect which pages have been accessed
+  pagetable_t userPageTable = myproc()->pagetable;
+  uint64 firstVirtualAddress, maskAddress;
+  int checkSize;
+
+  argaddr(0, &firstVirtualAddress);
+  argint(1, &checkSize);
+  argaddr(2, &maskAddress);
+
+  if (checkSize > 32) {
+    return -1;
+  }
+
+  uint maskBits = 0;
+
+  for (int i = 0; i < checkSize; ++i) {
+    pte_t* pageTableEntry = walk(userPageTable, firstVirtualAddress + i * PGSIZE, 0);
+    if (pageTableEntry == 0) {
+      panic("page not exist");
+    }
+
+    if (*pageTableEntry & PTE_A) {
+      maskBits |= (1 << i);
+      *pageTableEntry &= ~PTE_A;
+    } 
+  }
+
+  if(copyout(userPageTable, maskAddress, (char*)&maskBits, sizeof(maskBits)) < 0) {
+    return -1;
+  }
+
   return 0;
 }
 #endif
