@@ -133,3 +133,17 @@ printfinit(void)
   initlock(&pr.lock, "pr");
   pr.locking = 1;
 }
+
+// Lab4: traps ------ backtrace
+void
+backtrace(void)
+{
+  uint64 currentFP = r_fp();
+  while (currentFP != PGROUNDDOWN(currentFP))
+  {
+    // print return address (ra)
+    printf("%p\n", *(uint64*)(currentFP - 8));
+    // go to previous fp
+    currentFP = *(uint64*)(currentFP - 16);
+  }
+}
