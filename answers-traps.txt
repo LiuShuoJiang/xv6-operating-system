@@ -1,0 +1,12 @@
+1. a0~a7 contain arguments to functions. a2 holds 13 in main's call to printf.
+
+2. No direct call. g(x) is inlined within f(x) and f(x) is inlined into main().
+
+3. 0x652
+
+4. 0x38
+
+5. He110 World
+If the RISC-V were instead big-endian, set i = 0x726c6400 to yield the same output. No need to change 57616.
+
+6. A random value. It depends on the previous value in a2.
