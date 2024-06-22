@@ -140,6 +140,17 @@ found:
     return 0;
   }
 
+  // Lab4: traps ------ alarm
+  p->elapsedTicks = 0;
+  p->alarmState = 0;
+  p->alarmInterval = 0;
+  p->alarmHandler = 0;
+  if ((p->savedTrapframe = (struct trapframe *)kalloc()) == 0) {
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
+
   // Set up new context to start executing at forkret,
   // which returns to user space.
   memset(&p->context, 0, sizeof(p->context));
@@ -169,6 +180,16 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  
+  // Lab4: traps ------ alarm
+  p->elapsedTicks = 0;
+  p->alarmState = 0;
+  p->alarmInterval = 0;
+  p->alarmHandler = 0;
+  if (p->savedTrapframe) {
+    kfree((void*)p->savedTrapframe);
+  }
+  p->savedTrapframe = 0;
 }
 
 // Create a user page table for a given process, with no user memory,

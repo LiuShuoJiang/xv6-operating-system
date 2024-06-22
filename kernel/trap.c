@@ -77,8 +77,22 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  // Lab4: traps ------ alarm
+  if(which_dev == 2) {
+    if (p->alarmInterval > 0) {
+      p->elapsedTicks++;
+      if (p->elapsedTicks >= p->alarmInterval && !p->alarmState) {
+        p->elapsedTicks = 0;
+        // *p->savedTrapframe = *p->trapframe;
+        memmove(p->savedTrapframe, p->trapframe, sizeof(struct trapframe));
+        p->trapframe->epc = (uint64)p->alarmHandler;  // epc points to the handler function
+        p->alarmState = 1;  // we will execute handler
+      }
+    }
+
+    // original code
     yield();
+  }
 
   usertrapret();
 }

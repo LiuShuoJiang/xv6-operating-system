@@ -36,3 +36,6 @@ entry("getpid");
 entry("sbrk");
 entry("sleep");
 entry("uptime");
+# Lab4: traps ------ alarm
+entry("sigalarm");
+entry("sigreturn");

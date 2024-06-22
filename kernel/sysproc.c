@@ -54,6 +54,9 @@ sys_sleep(void)
   int n;
   uint ticks0;
 
+  // Lab4: traps ------ backtrace
+  backtrace();
+
   argint(0, &n);
   if(n < 0)
     n = 0;
@@ -90,4 +93,31 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+// Lab4: traps ------ alarm
+uint64
+sys_sigalarm(void)
+{
+  struct proc* p = myproc();
+  int ticks;
+  uint64 handler;
+  argint(0, &ticks);
+  argaddr(1, &handler);
+
+  p->alarmInterval = ticks;
+  p->alarmHandler = handler;
+
+  return 0;
+}
+
+// Lab4: traps ------ alarm
+uint64
+sys_sigreturn(void)
+{
+  struct proc* p = myproc();
+  // *p->trapframe = *p->savedTrapframe;
+  memmove(p->trapframe, p->savedTrapframe, sizeof(struct trapframe));
+  p->alarmState = 0;
+  return p->trapframe->a0;
 }

@@ -20,3 +20,6 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+// Lab4: traps ------ alarm
+#define SYS_sigalarm 22
+#define SYS_sigreturn 23
