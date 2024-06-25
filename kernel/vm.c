@@ -315,22 +315,44 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   pte_t *pte;
   uint64 pa, i;
   uint flags;
-  char *mem;
+  // ===================== Lab5: Copy-on-Write Fork =====================:
+  // char *mem;  // commented out for Lab5
+  // :===================== Lab5: Copy-on-Write Fork =====================
 
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walk(old, i, 0)) == 0)
       panic("uvmcopy: pte should exist");
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
+    
+    // ===================== Lab5: Copy-on-Write Fork =====================:
+    if ((*pte & PTE_COW) == 0) {  // skip if forked twice
+      *pte |= PTE_COW;
+
+      if (*pte & PTE_W) {
+        *pte |= PTE_PREV_WRITE;
+      } else {
+        *pte &= ~PTE_PREV_WRITE;
+      }
+
+      *pte &= ~PTE_W;  // disable writing for CoW pages
+    }
+    // :===================== Lab5: Copy-on-Write Fork =====================
+    
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
-      kfree(mem);
+
+    // ===================== Lab5: Copy-on-Write Fork =====================:
+    // if((mem = kalloc()) == 0)
+    //   goto err;
+    // memmove(mem, (char*)pa, PGSIZE);
+    if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
+      // kfree(mem);  // commented out for Lab5
       goto err;
     }
+    
+    kIncreaseReferenceCount(pa);
+    // :===================== Lab5: Copy-on-Write Fork =====================
   }
   return 0;
 
@@ -366,9 +388,23 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
     if(va0 >= MAXVA)
       return -1;
     pte = walk(pagetable, va0, 0);
-    if(pte == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_U) == 0 ||
-       (*pte & PTE_W) == 0)
+    // note: ((*pte & PTE_W) == 0) condition from the original code have been moved below for Lab5
+    if(pte == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_U) == 0)
       return -1;
+    
+    // ===================== Lab5: Copy-on-Write Fork =====================:
+    if ((*pte & PTE_W) == 0) {
+      // if it is not a CoW page or is not writable, return -1
+      if (!((*pte & PTE_COW) && (*pte & PTE_PREV_WRITE))) {
+        return -1;
+      }
+
+      if (allocCopyOnWritePage(pagetable, va0) != 0) {
+        return -1;
+      }
+    }
+    // :===================== Lab5: Copy-on-Write Fork =====================
+    
     pa0 = PTE2PA(*pte);
     n = PGSIZE - (dstva - va0);
     if(n > len)

@@ -63,6 +63,12 @@ void            ramdiskrw(struct buf*);
 void*           kalloc(void);
 void            kfree(void *);
 void            kinit(void);
+// ===================== Lab5: Copy-on-Write Fork =====================:
+int kGetReferenceCount(uint64 pa);
+int kIncreaseReferenceCount(uint64 pa);
+int checkCopyOnWritePage(pagetable_t pagetable, uint64 va);
+int allocCopyOnWritePage(pagetable_t pagetable, uint64 va);
+// :===================== Lab5: Copy-on-Write Fork =====================
 
 // log.c
 void            initlog(int, struct superblock*);

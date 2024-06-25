@@ -67,6 +67,15 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
+  } else if (r_scause() == 7 || r_scause() == 15) {
+    // ===================== Lab5: Copy-on-Write Fork =====================:
+    uint64 pageFaultVa = r_stval();
+    if (pageFaultVa >= MAXVA
+      || checkCopyOnWritePage(p->pagetable, pageFaultVa) != 0
+      || allocCopyOnWritePage(p->pagetable, PGROUNDDOWN(pageFaultVa)) != 0) {
+      setkilled(p);
+    }
+    // :===================== Lab5: Copy-on-Write Fork =====================
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
