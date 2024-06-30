@@ -17,6 +17,9 @@ struct entry *table[NBUCKET];
 int keys[NKEYS];
 int nthread = 1;
 
+// ===================== Lab6: Using threads =====================:
+pthread_mutex_t locks[NBUCKET];
+// :===================== Lab6: Using threads =====================
 
 double
 now()
@@ -51,8 +54,12 @@ void put(int key, int value)
     // update the existing key.
     e->value = value;
   } else {
+    // ===================== Lab6: Using threads =====================:
+    pthread_mutex_lock(&locks[i]);
     // the new is new.
     insert(key, value, &table[i], table[i]);
+    pthread_mutex_unlock(&locks[i]);
+    // :===================== Lab6: Using threads =====================
   }
 
 }
@@ -117,6 +124,12 @@ main(int argc, char *argv[])
   for (int i = 0; i < NKEYS; i++) {
     keys[i] = random();
   }
+
+  // ===================== Lab6: Using threads =====================:
+  for (int i = 0; i < NBUCKET; i++) {
+    pthread_mutex_init(&locks[i], NULL);
+  }
+  // :===================== Lab6: Using threads =====================
 
   //
   // first the puts
