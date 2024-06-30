@@ -1,0 +1,12 @@
+Consider the following scenario:
+
+There are two keys, k1 and k2, that belong to the same linked list in the hash table, and neither of these key-value pairs exist in the list yet. Now, there are two threads, t1 and t2, attempting to insert these two keys into the list.
+
+The following situation may occur:
+
+- t1 first checks that k1 does not exist in the list, so it prepares to call insert() to insert the key-value pair at the front of the list.
+- At this point, the thread scheduler switches to t2 (or in a multi-core environment, both threads execute in parallel, but t2 executes faster than t1).
+- Then t2 also finds that k2 does not exist in the list, so it calls insert() to insert it. After insertion, k2 becomes the first element of the list.
+- Subsequently, t1 inserts into k1. However, since t1 is unaware that t2 has already inserted k2 at the beginning, it inserts k1 at what it believes to be the start of the list (the position where k2 is located), causing k2 to be overwritten and resulting in the loss of the key-value pair.
+
+In this case, we need to use locking to resolve the issue.
