@@ -102,7 +102,42 @@ e1000_transmit(struct mbuf *m)
   // the TX descriptor ring so that the e1000 sends it. Stash
   // a pointer so that it can be freed after sending.
   //
-  
+  // ===================== Lab7: Networking =====================:
+  acquire(&e1000_lock);
+
+  uint index = regs[E1000_TDT];  // TX ring index at which it's expecting the next packet, transmit tail
+  struct tx_desc *desc = &tx_ring[index];
+
+  // check if the the ring is overflowing
+  // if E1000_TXD_STAT_DD is not set in the descriptor indexed by E1000_TDT
+  if (!(desc->status & E1000_TXD_STAT_DD)) {
+    release(&e1000_lock);
+    return -1;
+  }
+
+  // use mbuffree() to free the last mbuf that was transmitted from that descriptor (if there was one)
+  if (tx_mbufs[index] != 0) {
+    mbuffree(tx_mbufs[index]);
+    tx_mbufs[index] = 0;
+  }
+
+  // fill in the descriptor
+  desc->addr = (uint64)m->head;  // m->head points to the packet's content in memory
+  desc->length = m->len;         // m->len is the packet length
+
+  // set the necessary cmd flags
+  desc->cmd = E1000_TXD_CMD_RS | E1000_TXD_CMD_EOP;
+
+  // preserve the new mbuf's pointer,
+  // so that it can be released when the same index is used again in the future
+  tx_mbufs[index] = m;
+
+  // update the ring position by adding one to E1000_TDT modulo TX_RING_SIZE
+  regs[E1000_TDT] = (index + 1) % TX_RING_SIZE;
+
+  release(&e1000_lock);
+  // :===================== Lab7: Networking =====================
+
   return 0;
 }
 
@@ -115,6 +150,36 @@ e1000_recv(void)
   // Check for packets that have arrived from the e1000
   // Create and deliver an mbuf for each packet (using net_rx()).
   //
+  // ===================== Lab7: Networking =====================:
+  while(1) {
+    // ask the E1000 for the ring index at which the next waiting received packet (if any) is located,
+    // by fetching the E1000_RDT control register and adding one modulo RX_RING_SIZE
+    uint index = (regs[E1000_RDT] + 1) % RX_RING_SIZE;
+
+    struct rx_desc *desc = &rx_ring[index];
+
+    // check if a new packet is available
+    // by checking for the E1000_RXD_STAT_DD bit in the status portion of the descriptor
+    if(!(desc->status & E1000_RXD_STAT_DD)) {
+      return;
+    }
+
+    // update the mbuf's m->len to the length reported in the descriptor
+    rx_mbufs[index]->len = desc->length;
+
+    net_rx(rx_mbufs[index]);  // deliver the mbuf to the network stack using net_rx()
+
+    // allocate a new mbuf using mbufalloc() to replace the one just given to net_rx()
+    rx_mbufs[index] = mbufalloc(0);
+    // program its data pointer (m->head) into the descriptor
+    desc->addr = (uint64)rx_mbufs[index]->head;
+    // clear the descriptor's status bits to zero
+    desc->status = 0;
+
+    // update the E1000_RDT register to be the index of the last ring descriptor processed
+    regs[E1000_RDT] = index;
+  }
+  // :===================== Lab7: Networking =====================
 }
 
 void
