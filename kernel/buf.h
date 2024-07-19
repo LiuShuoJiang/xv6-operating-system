@@ -5,8 +5,18 @@ struct buf {
   uint blockno;
   struct sleeplock lock;
   uint refcnt;
-  struct buf *prev; // LRU cache list
+  // ===================== Lab8: Buffer Cache =====================:
+  // commented out for Lab8
+  // struct buf *prev; // LRU cache list
+  // :===================== Lab8: Buffer Cache =====================
   struct buf *next;
   uchar data[BSIZE];
+
+  // ===================== Lab8: Buffer Cache =====================:
+  // trash: this buf contains invalid dev and blockno
+  // and needs to be evicted and re-hashed before use.
+  int trash;
+  uint lastUseTimestamp;
+  // :===================== Lab8: Buffer Cache =====================
 };
 
