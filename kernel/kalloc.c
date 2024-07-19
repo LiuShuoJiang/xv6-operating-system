@@ -18,15 +18,23 @@ struct run {
   struct run *next;
 };
 
+// ===================== Lab8: Locks =====================:
 struct {
   struct spinlock lock;
   struct run *freelist;
-} kmem;
+} kmem[NCPU];
+// :===================== Lab8: Locks =====================
 
 void
 kinit()
 {
-  initlock(&kmem.lock, "kmem");
+  // ===================== Lab8: Locks =====================:
+  char lockName[10];
+  for (int i = 0; i < NCPU; i++) {
+    snprintf(lockName, sizeof(lockName), "kmem_cpu%d", i);
+    initlock(&kmem[i].lock, lockName);
+  }
+  // :===================== Lab8: Locks =====================
   freerange(end, (void*)PHYSTOP);
 }
 
@@ -56,10 +64,16 @@ kfree(void *pa)
 
   r = (struct run*)pa;
 
-  acquire(&kmem.lock);
-  r->next = kmem.freelist;
-  kmem.freelist = r;
-  release(&kmem.lock);
+  // ===================== Lab8: Locks =====================:
+  push_off();
+  int cpuID = cpuid();
+  pop_off();
+  
+  acquire(&kmem[cpuID].lock);
+  r->next = kmem[cpuID].freelist;
+  kmem[cpuID].freelist = r;
+  release(&kmem[cpuID].lock);
+  // :===================== Lab8: Locks =====================
 }
 
 // Allocate one 4096-byte page of physical memory.
@@ -70,11 +84,38 @@ kalloc(void)
 {
   struct run *r;
 
-  acquire(&kmem.lock);
-  r = kmem.freelist;
-  if(r)
-    kmem.freelist = r->next;
-  release(&kmem.lock);
+  // ===================== Lab8: Locks =====================:
+  push_off();
+  int cpuID = cpuid();
+  pop_off();
+
+  acquire(&kmem[cpuID].lock);
+  
+  r = kmem[cpuID].freelist;
+  if(r) {  // normal case
+    kmem[cpuID].freelist = r->next;
+  } else {  // "steal" page from another CPU
+    int id;
+    for (id = 0; id < NCPU; id++) {
+      if (id == cpuID) {
+        continue;
+      }
+
+      acquire(&kmem[id].lock);
+
+      r = kmem[id].freelist;
+      if (r) {
+        kmem[id].freelist = r->next;
+        release(&kmem[id].lock);
+        break;
+      }
+
+      release(&kmem[id].lock);
+    }
+  }
+  
+  release(&kmem[cpuID].lock);
+  // :===================== Lab8: Locks =====================
 
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
