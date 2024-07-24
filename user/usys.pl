@@ -36,3 +36,6 @@ entry("getpid");
 entry("sbrk");
 entry("sleep");
 entry("uptime");
+# ===================== Lab9: Symbolic Links =====================:
+entry("symlink");
+# :===================== Lab9: Symbolic Links =====================

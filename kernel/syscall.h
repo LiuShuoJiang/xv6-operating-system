@@ -20,3 +20,6 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+// ===================== Lab9: Symbolic Links =====================:
+#define SYS_symlink 22
+// :===================== Lab9: Symbolic Links =====================

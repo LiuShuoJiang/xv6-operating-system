@@ -22,6 +22,9 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+// ===================== Lab9: Symbolic Links =====================:
+int symlink(char *target, char *path);
+// :===================== Lab9: Symbolic Links =====================
 
 // ulib.c
 int stat(const char*, struct stat*);

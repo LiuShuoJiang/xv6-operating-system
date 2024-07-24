@@ -101,6 +101,9 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
+// ===================== Lab9: Symbolic Links =====================:
+extern uint64 sys_symlink(void);
+// :===================== Lab9: Symbolic Links =====================
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -126,6 +129,9 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+// ===================== Lab9: Symbolic Links =====================:
+[SYS_symlink] sys_symlink,
+// :===================== Lab9: Symbolic Links =====================
 };
 
 void
